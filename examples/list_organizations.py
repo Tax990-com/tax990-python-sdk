@@ -23,7 +23,6 @@ async def main() -> None:
         client_id=os.environ["TAX990_CLIENT_ID"],
         client_secret=os.environ["TAX990_CLIENT_SECRET"],
         user_token=os.environ["TAX990_USER_TOKEN"],
-        environment=os.environ.get("TAX990_ENVIRONMENT", "sandbox"),
     )
 
     submission_id = os.environ.get("TAX990_SUBMISSION_ID")
@@ -46,7 +45,7 @@ async def main() -> None:
                 biz = rec.Business
                 name = biz.BusinessNm if biz else "Unknown"
                 ein = biz.EIN if biz else "N/A"
-                print(f"  {rec.RecordId}: {name} (EIN: {ein}) — {rec.RecordStatus}")
+                print(f"  {rec.RecordId}: {name} (EIN: {ein}) -- {rec.RecordStatus}")
         else:
             print("No records found.")
     except NotFoundError:

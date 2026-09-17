@@ -54,7 +54,7 @@ def handle_webhook(raw_body: str, x_signature_header: str) -> None:
     )
 
     if not valid:
-        print("Webhook signature verification FAILED — reject request.")
+        print("Webhook signature verification FAILED -- reject request.")
         return
 
     event = json.loads(raw_body)

@@ -22,11 +22,6 @@ class ForeignAddress(BaseModel):
     PostalCd: Optional[str] = None
 
 
-# Python's bytecode executes the value assignment (= None) BEFORE storing the
-# annotation, so `USAddress = None` would shadow the class `USAddress` inside
-# `Optional[USAddress]`.  Proxy aliases sidestep this: the field is still named
-# `USAddress` (matching the API JSON key) but the type annotation references the
-# proxy `_USAddress`, which is never a field name and is never shadowed.
 _USAddress = USAddress
 _ForeignAddress = ForeignAddress
 
@@ -67,8 +62,6 @@ class Form990NData(BaseModel):
 
 
 class Form990NRecord(BaseModel):
-    # No default value — required fields. Python does not execute STORE_NAME for
-    # annotation-only statements, so no shadowing occurs here.
     Business: Business
     Form990N: Form990NData
 

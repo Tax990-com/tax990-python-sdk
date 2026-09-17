@@ -5,7 +5,7 @@ from typing import Any
 
 class ApiKeysResource:
     """
-    API key management endpoints are not documented in the Tax990 Public API (ANALYSIS.md).
+    API key management endpoints are not documented in the Tax990 Public API.
     Authentication uses the JWS/JWT flow — see OAuthClient.
     """
 

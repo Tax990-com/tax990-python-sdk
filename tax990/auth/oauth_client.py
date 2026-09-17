@@ -11,9 +11,9 @@ from tax990.models.auth import GenerateJWSResponse, Tax990TokenResponse
 
 class OAuthClient:
     """
-    Implements the Tax990 two-step token flow (ANALYSIS.md §Authentication):
+    Implements the Tax990 two-step token flow:
       1. Sign a JWS locally with HS256 (claims: iss/sub/aud/iat, key: client_secret)
-      2. GET /Auth/GetTax990Token with `authentication: <JWS>` → RS256 access token
+      2. GET /Auth/GetTax990Token with `authentication: <JWS>` header -> RS256 access token
     """
 
     def __init__(
@@ -29,7 +29,7 @@ class OAuthClient:
         self._user_token = user_token
 
     def sign_jws_locally(self) -> str:
-        """Signs a JWS using HS256 with client_secret. Claims per ANALYSIS.md."""
+        """Signs a JWS using HS256 with client_secret."""
         payload = {
             "iss": self._client_id,
             "sub": self._client_id,

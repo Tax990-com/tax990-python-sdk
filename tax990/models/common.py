@@ -31,6 +31,5 @@ class ApiResponse(BaseModel, Generic[S, E]):
 
 
 class Pagination(BaseModel):
-    """Pagination is not implemented in the Tax990 Public API (ANALYSIS.md §Pagination: None)."""
-
+    """Pagination is not implemented in the Tax990 Public API."""
     pass

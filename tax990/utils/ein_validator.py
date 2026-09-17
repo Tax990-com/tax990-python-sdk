@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 
-# EIN pattern from ANALYSIS.md §Business Entity Fields
+# EIN pattern: 9 digits or XX-XXXXXXX format
 _EIN_RE = re.compile(r"^(\d{9}|\d{2}-\d{7})$")
 
 

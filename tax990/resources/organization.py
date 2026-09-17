@@ -9,7 +9,7 @@ from tax990.models.form990n import ErrorRecord, GetSuccessRecord
 
 class OrganizationResource:
     """
-    Organization data is embedded in Form990N records (ANALYSIS.md).
+    Organization data is embedded in Form990N records.
     Wraps form990n endpoints and surfaces the Business fields.
     """
 

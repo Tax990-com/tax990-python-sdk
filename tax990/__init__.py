@@ -1,6 +1,11 @@
 from __future__ import annotations
 
+import os
 from typing import Optional
+
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from tax990.auth.oauth_client import OAuthClient
 from tax990.auth.token_manager import TokenManager
@@ -37,21 +42,12 @@ from tax990.models.form990n import (  # noqa: F401
 from tax990.resources.api_keys import ApiKeysResource
 from tax990.resources.filing_status import FilingStatusResource
 from tax990.resources.form990n import Form990NResource
+from tax990.resources.nonprofits import NonprofitsResource
 from tax990.resources.organization import OrganizationResource
+from tax990.resources.utility import UtilityResource
 from tax990.resources.webhook import WebhookResource
 from tax990.utils.ein_validator import format_ein, validate_ein  # noqa: F401
 from tax990.utils.webhook_verifier import verify_webhook_signature  # noqa: F401
-
-_ENVIRONMENT_URLS: dict[str, dict[str, str]] = {
-    "production": {
-        "api_url": "https://api.tax990.com",
-        "oauth_url": "https://oauth.tax990.com",
-    },
-    "sandbox": {
-        "api_url": "http://localhost:9005",
-        "oauth_url": "http://localhost:4000",
-    },
-}
 
 
 class Tax990Client:
@@ -76,6 +72,8 @@ class Tax990Client:
     form990n: Form990NResource
     organizations: OrganizationResource
     filing_status: FilingStatusResource
+    utility: UtilityResource
+    nonprofits: NonprofitsResource
     webhooks: WebhookResource
     api_keys: ApiKeysResource
 
@@ -89,9 +87,8 @@ class Tax990Client:
         oauth_url: Optional[str] = None,
         timeout: int = 30,
     ) -> None:
-        defaults = _ENVIRONMENT_URLS[environment]
-        _oauth_url = oauth_url or defaults["oauth_url"]
-        _api_url = api_url or defaults["api_url"]
+        _api_url = api_url or os.environ.get("TAX990_API_URL", "")
+        _oauth_url = oauth_url or os.environ.get("TAX990_OAUTH_URL", "")
 
         oauth_http = HttpClient(base_url=_oauth_url, timeout=timeout)
         oauth_client = OAuthClient(
@@ -111,5 +108,7 @@ class Tax990Client:
         self.form990n = Form990NResource(http=api_http)
         self.organizations = OrganizationResource(http=api_http)
         self.filing_status = FilingStatusResource(http=api_http)
+        self.utility = UtilityResource(http=api_http)
+        self.nonprofits = NonprofitsResource(http=api_http)
         self.webhooks = WebhookResource()
         self.api_keys = ApiKeysResource()
