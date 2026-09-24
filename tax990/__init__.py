@@ -45,7 +45,6 @@ from tax990.resources.form990n import Form990NResource
 from tax990.resources.nonprofits import NonprofitsResource
 from tax990.resources.organization import OrganizationResource
 from tax990.resources.utility import UtilityResource
-from tax990.resources.webhook import WebhookResource
 from tax990.utils.ein_validator import format_ein, validate_ein  # noqa: F401
 from tax990.utils.webhook_verifier import verify_webhook_signature  # noqa: F401
 
@@ -74,7 +73,6 @@ class Tax990Client:
     filing_status: FilingStatusResource
     utility: UtilityResource
     nonprofits: NonprofitsResource
-    webhooks: WebhookResource
     api_keys: ApiKeysResource
 
     def __init__(
@@ -110,5 +108,4 @@ class Tax990Client:
         self.filing_status = FilingStatusResource(http=api_http)
         self.utility = UtilityResource(http=api_http)
         self.nonprofits = NonprofitsResource(http=api_http)
-        self.webhooks = WebhookResource()
         self.api_keys = ApiKeysResource()

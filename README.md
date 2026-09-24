@@ -145,8 +145,8 @@ Set these in `python/.env` (loaded automatically via `python-dotenv`) or export 
 | `TAX990_CLIENT_ID` | ✅ | OAuth client identifier |
 | `TAX990_CLIENT_SECRET` | ✅ | OAuth client secret, used to sign the JWS |
 | `TAX990_USER_TOKEN` | ✅ | OAuth audience token for this client |
-| `TAX990_API_URL` | ✅ | Public API base URL (e.g. `https://api.tax990.com`) |
-| `TAX990_OAUTH_URL` | ✅ | OAuth API base URL (e.g. `https://oauth.tax990.com`) |
+| `TAX990_API_URL` | ✅ | Public API base URL — production: `https://api.tax990.com`, sandbox: `https://api-sandbox.tax990.com` |
+| `TAX990_OAUTH_URL` | ✅ | OAuth base URL — production: `https://oauth.tax990.com`, sandbox: `https://oauth-sandbox.tax990.com` |
 
 `api_url=` / `oauth_url=` can be passed to `Tax990Client(...)` to override the env vars at the
 call site.
