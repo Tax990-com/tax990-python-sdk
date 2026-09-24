@@ -1,53 +1,9 @@
-# Tax990 Python SDK 2.0
+# tax990-python-sdk
 
-## Overview
+Official async Python SDK for the Tax990 Public API — IRS Form 990-N e-filing, utility lookups,
+and nonprofit organization search.
 
-The Tax990 Python SDK 2.0.x is an async Python integration package for the Tax990 Public API. It
-enables businesses and software providers to integrate IRS Form 990-N e-filing directly into their
-applications, without hand-rolling OAuth, request signing, or response parsing.
-
-This SDK provides:
-
-- **`Tax990Client`** — a single entry point exposing typed resources for Form 990-N filing,
-  utility ID lookups, and nonprofit organization lookups
-- **Automatic OAuth 2.0 token management** — signs and refreshes access tokens transparently
-  between calls
-- **`async`/`await` throughout**, built on `httpx`
-- **Pydantic models** for every request and response — validated, typed, IDE-friendly
-
-A separate React UI ([`../frontend`](../frontend)) is included in this repository as a shared
-playground for exercising any of the four language SDKs side by side. See
-[`../UI_INTEGRATION.md`](../UI_INTEGRATION.md) for a full FastAPI bridge server built on this exact
-SDK, and [`../TESTING.md`](../TESTING.md) for the test walkthrough.
-
-🔗 Full API Reference: [developer.tax990.com](https://developer.tax990.com)
-
-## Project Structure
-
-```
-python/
-├── tax990/
-│   ├── auth/                # oauth_client.py, token_manager.py
-│   ├── errors/                # exceptions.py — Tax990Error and subclasses
-│   ├── http/                   # http_client.py (httpx wrapper, bearer injection)
-│   ├── models/                   # common.py, form990n.py, webhook.py — Pydantic models
-│   ├── resources/                 # form990n.py, utility.py, nonprofits.py, organization.py, ...
-│   ├── utils/                       # ein_validator.py, webhook_verifier.py
-│   └── __init__.py                   # Tax990Client — package entry point
-├── examples/
-│   ├── submit_990n.py
-│   ├── check_filing_status.py
-│   ├── list_organizations.py
-│   ├── lookup_nonprofit.py
-│   ├── handle_webhook.py
-│   └── verify_webhook.py
-├── tests/
-│   ├── test_auth.py
-│   ├── test_form990n.py
-│   ├── test_webhook.py
-│   └── fixtures/
-└── pyproject.toml
-```
+🔗 API Reference: [developer.tax990.com](https://developer.tax990.com)
 
 ## Installation
 
@@ -55,14 +11,13 @@ python/
 pip install tax990-sdk
 ```
 
-Or, to install from source inside this repository:
+Or install from source:
 
 ```bash
-cd python
 pip install -e .
 ```
 
-## Quick Start
+## Quick start
 
 ```python
 import asyncio
@@ -74,106 +29,89 @@ async def main():
         client_id=os.environ["TAX990_CLIENT_ID"],
         client_secret=os.environ["TAX990_CLIENT_SECRET"],
         user_token=os.environ["TAX990_USER_TOKEN"],
-        # API and OAuth URLs are read from TAX990_API_URL / TAX990_OAUTH_URL env vars
     )
-
     ping = await client.utility.ping()
     print(ping)
 
 asyncio.run(main())
 ```
 
-## Available API Modules
+## Environment variables
 
-### Authentication
+Create a `.env` file in the repo root:
 
-Handled automatically. `Tax990Client` signs a JWS locally with `client_secret`, exchanges it for
-an access token against the OAuth endpoint, and caches/refreshes it before expiry — no manual
-token handling required.
-
-### Form 990-N (`client.form990n`)
-
-Create, validate, and transmit IRS Form 990-N e-Postcard filings.
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `create(payload, idempotency_key?)` | `POST /v1/form990n/create` | Create and save a new Form 990-N filing |
-| `submit(payload, idempotency_key?)` | `POST /v1/form990n/create` | Alias for `create` |
-| `update(payload)` | `POST /v1/form990n/update` | Update an existing filing |
-| `get(submission_id, record_id?)` | `GET /v1/form990n/get` | Retrieve a saved filing by SubmissionId |
-| `list(submission_id?, business_id?)` | `GET /v1/form990n/list` | Paginated list of filings |
-| `delete(submission_id, record_id?)` | `DELETE /v1/form990n/delete` | Delete an untransmitted filing |
-| `validate(submission_id, record_ids)` | `GET /v1/form990n/validate` | Validate records before transmit |
-| `transmit(payload)` | `POST /v1/form990n/transmit` | E-file to the IRS |
-| `get_pdf(submission_id, record_ids?)` | `GET /v1/form990n/getPDF` | Download filing PDF copies |
-| `status(submission_id, record_ids?)` | `GET /v1/form990n/status` | Check IRS acknowledgement status |
-
-**Key fields:** `TaxYr`, `TaxPeriodBeginDt`/`EndDt`, `IsGrossReceiptsUnder50K`,
-`IsOrganizationTerminated`, `PrincipalOfficer`, `Business.USAddress`/`ForeignAddress`.
-
-### Utility (`client.utility`)
-
-Health checks and cross-reference ID lookups.
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `ping()` | `GET /v1/utility/ping` | Health check |
-| `get_all_submission_id()` | `GET /v1/utility/getAllSubmissionId` | Get all submission IDs |
-| `get_submission_id_by_business_id(business_id)` | `GET /v1/utility/getSubmissionIdByBusinessId` | Look up submission by business ID |
-| `get_submission_id_by_record_id(record_id)` | `GET /v1/utility/getSubmissionIdByRecordId` | Look up submission by record ID |
-| `get_record_ids()` | `GET /v1/utility/getRecordIds` | Get all record IDs |
-| `get_record_id_by_submission_id(submission_id)` | `GET /v1/utility/getRecordIdBySubmissionId` | Get records for a submission |
-| `get_record_detail_by_submission_id(submission_id)` | `GET /v1/utility/getRecordDetailBySubmissionId` | Get record details for a submission |
-| `get_all_business_id()` | `GET /v1/utility/getAllBusinessId` | Get all business IDs |
-| `get_business_id_by_submission_id(submission_id)` | `GET /v1/utility/getBusinessIdBySubmissionId` | Get business ID for a submission |
-
-### Nonprofits (`client.nonprofits`)
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `get_organization_details_by_ein(ein)` | `GET /v1/nonprofits/getOrganizationDetailsByEIN` | Look up nonprofit organization details by EIN |
-
-Also available: `client.organizations` (business-entity queries over the same Form 990-N data) and
-`client.filing_status` (a status-only convenience wrapper).
-
-## Environment Variables
-
-Set these in `python/.env` (loaded automatically via `python-dotenv`) or export them in your shell.
+```
+TAX990_CLIENT_ID=...
+TAX990_CLIENT_SECRET=...
+TAX990_USER_TOKEN=...
+TAX990_API_URL=https://api-sandbox.tax990.com
+TAX990_OAUTH_URL=https://oauth-sandbox.tax990.com
+```
 
 | Variable | Required | Description |
 |---|---|---|
 | `TAX990_CLIENT_ID` | ✅ | OAuth client identifier |
 | `TAX990_CLIENT_SECRET` | ✅ | OAuth client secret, used to sign the JWS |
 | `TAX990_USER_TOKEN` | ✅ | OAuth audience token for this client |
-| `TAX990_API_URL` | ✅ | Public API base URL — production: `https://api.tax990.com`, sandbox: `https://api-sandbox.tax990.com` |
+| `TAX990_API_URL` | ✅ | API base URL — production: `https://api.tax990.com`, sandbox: `https://api-sandbox.tax990.com` |
 | `TAX990_OAUTH_URL` | ✅ | OAuth base URL — production: `https://oauth.tax990.com`, sandbox: `https://oauth-sandbox.tax990.com` |
 
-`api_url=` / `oauth_url=` can be passed to `Tax990Client(...)` to override the env vars at the
-call site.
+`api_url=` / `oauth_url=` can be passed to `Tax990Client(...)` to override env vars at the call site.
 
-## Typical Workflow
+## Available modules
 
-1. **Instantiate** → `Tax990Client(client_id=..., client_secret=..., user_token=...)`
-2. **Create a filing** → `await client.form990n.create(payload)` → store the returned `SubmissionId`
-3. **Validate (optional)** → `await client.form990n.validate(...)` to catch errors before transmit
-4. **Review a draft** → `await client.form990n.get_pdf(...)` for a pre-transmission preview
-5. **Transmit** → `await client.form990n.transmit(...)` to e-file with the IRS
-6. **Track status** → `await client.form990n.status(...)` for acknowledgement status
-7. **Look up organizations** → `await client.nonprofits.get_organization_details_by_ein(ein=...)` as needed
+### Form 990-N (`client.form990n`)
 
-## Error Handling
+| Method | Endpoint | Description |
+|---|---|---|
+| `create(payload, idempotency_key?)` | `POST /v1/form990n/create` | Create a new filing |
+| `update(payload)` | `POST /v1/form990n/update` | Update an existing filing |
+| `get(submission_id, record_id?)` | `GET /v1/form990n/get` | Retrieve a filing by SubmissionId |
+| `list(submission_id?, business_id?)` | `GET /v1/form990n/list` | List filings |
+| `delete(submission_id, record_id?)` | `DELETE /v1/form990n/delete` | Delete an untransmitted filing |
+| `validate(submission_id, record_ids)` | `GET /v1/form990n/validate` | Validate before transmit |
+| `transmit(payload)` | `POST /v1/form990n/transmit` | E-file to the IRS |
+| `get_pdf(submission_id, record_ids?)` | `GET /v1/form990n/getPDF` | Download PDF copies |
+| `status(submission_id, record_ids?)` | `GET /v1/form990n/status` | Check IRS acknowledgement status |
+
+### Utility (`client.utility`)
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `ping()` | `GET /v1/utility/ping` | Health check |
+| `get_all_submission_id()` | `GET /v1/utility/getAllSubmissionId` | All submission IDs |
+| `get_submission_id_by_business_id(business_id)` | `GET /v1/utility/getSubmissionIdByBusinessId` | Submission by business ID |
+| `get_submission_id_by_record_id(record_id)` | `GET /v1/utility/getSubmissionIdByRecordId` | Submission by record ID |
+| `get_record_ids()` | `GET /v1/utility/getRecordIds` | All record IDs |
+| `get_record_id_by_submission_id(submission_id)` | `GET /v1/utility/getRecordIdBySubmissionId` | Records for a submission |
+| `get_record_detail_by_submission_id(submission_id)` | `GET /v1/utility/getRecordDetailBySubmissionId` | Record details |
+| `get_all_business_id()` | `GET /v1/utility/getAllBusinessId` | All business IDs |
+| `get_business_id_by_submission_id(submission_id)` | `GET /v1/utility/getBusinessIdBySubmissionId` | Business ID for a submission |
+
+### Nonprofits (`client.nonprofits`)
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `get_organization_details_by_ein(ein)` | `GET /v1/nonprofits/getOrganizationDetailsByEIN` | Nonprofit details by EIN |
+
+Also available: `client.organizations`, `client.filing_status`.
+
+## Typical workflow
+
+1. `Tax990Client(...)` — instantiate
+2. `await client.form990n.create(payload)` → store the returned `SubmissionId`
+3. `await client.form990n.validate(...)` — catch errors before transmit (optional)
+4. `await client.form990n.get_pdf(...)` — review the draft PDF (optional)
+5. `await client.form990n.transmit(...)` — e-file to the IRS
+6. `await client.form990n.status(...)` — poll for IRS acknowledgement
+
+## Error handling
 
 ```python
-from tax990.errors.exceptions import (
-    Tax990Error,       # Base error
-    AuthError,         # 401 - Authentication failed
-    ValidationError,   # 400 - Validation errors
-    RateLimitError,    # 429 - Rate limit exceeded
-    NotFoundError,     # 404 - Resource not found
-)
+from tax990.errors.exceptions import Tax990Error, AuthError, ValidationError
 
 try:
-    result = await client.form990n.submit(payload)
+    result = await client.form990n.create(payload)
 except ValidationError as exc:
     for error in exc.errors:
         print(f"[{error.Code}] {error.Field}: {error.Message}")
@@ -192,28 +130,54 @@ validate_ein("12-3456789")  # True
 format_ein("123456789")     # "12-3456789"
 ```
 
-## Testing
+## Running tests
 
 ```bash
-cd python
 pip install -e ".[dev]"
 pytest
 ```
 
-## Documentation
+## Bridge server (for use with tax990-ui-sdk)
 
-🔗 [Tax990 Public API Docs](https://developer.tax990.com)
+`bridge.py` is a FastAPI app that exposes all SDK methods as REST endpoints, so the
+`tax990-ui-sdk` React app can exercise this SDK through its UI.
 
-## Tech Stack
+```bash
+pip install -e ".[dev]"
+
+# start bridge on http://localhost:4100
+uvicorn bridge:app --port 4100 --reload
+```
+
+Then in `tax990-ui-sdk`, set `VITE_BRIDGE_URL=http://localhost:4100` and run `npm run dev`.
+
+## Project structure
+
+```
+tax990-python-sdk/
+├── tax990/
+│   ├── auth/          oauth_client.py, token_manager.py
+│   ├── errors/        exceptions.py — Tax990Error and subclasses
+│   ├── http/          http_client.py (httpx wrapper, bearer injection)
+│   ├── models/        Pydantic models
+│   ├── resources/     form990n.py, utility.py, nonprofits.py, ...
+│   ├── utils/         ein_validator.py, webhook_verifier.py
+│   └── __init__.py    Tax990Client — package entry point
+├── bridge.py          FastAPI bridge server for tax990-ui-sdk
+├── examples/
+├── tests/
+└── pyproject.toml
+```
+
+## Tech stack
 
 | Layer | Technology |
 |---|---|
 | Runtime | Python 3.9+, `asyncio` |
 | HTTP | `httpx` |
 | Models | `pydantic` v2 |
-| Auth | OAuth 2.0 Bearer tokens, JWS (HS256) via `pyjwt` |
+| Auth | OAuth 2.0, JWS (HS256) via `pyjwt` |
+| Bridge | FastAPI + uvicorn |
 | Tests | `pytest`, `pytest-asyncio`, `respx` |
 
 ## License
-
-MIT — internal SDK for Tax990 Public API integration.
